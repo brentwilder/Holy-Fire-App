@@ -1,7 +1,6 @@
 // Application to visualize ECOSTRESS daily PT-ET data after 2018 Holy Fire
 // Brenton A. Wilder (Referenced from: https://code.earthengine.google.com/46314d510bf295c19e40413af5628055)
 // October 2020
-// Rquires 4 shapefiles (assets) : santiago, coldwater, 2018 holy fire, site outline
 
 // Set dates
 var Start_period = ee.Date('2018-07-01')
@@ -16,6 +15,21 @@ var evi_dataset = ee.ImageCollection('LANDSAT/LC08/C01/T1_8DAY_EVI')
     .filterDate(Start_period, End_period)
 var EVI = evi_dataset.select('EVI')
                      .map(function(image){return image.clip(site)}) 
+                     
+
+// Import NDVI image collection (S2)
+var sentinel_dataset = ee.ImageCollection("COPERNICUS/S2_SR")
+    .filterBounds(site)
+    .filterDate(Start_period, End_period)
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
+    // .map(maskS2clouds)
+var collection2 = sentinel_dataset.map(function(image) {
+  return image.select().addBands(image.normalizedDifference(['B8', 'B4'])).rename('NDVI')
+});
+
+var collection2 = collection2.select('NDVI')
+                                  .map(function(image){return image.clip(site)})
+                                  
                   
 // Mask iteration (ET)
 var maskfunction = function(image){
@@ -34,17 +48,17 @@ var collection = collection.map(function(image) {
 
 // Define a FeatureCollection
 var regions = ee.FeatureCollection([
-  ee.Feature(    // Coldwater
-    coldwater.geometry(), {label: 'Coldwater'}),
+  ee.Feature(  // Burn scar
+    fire.geometry(), {label: '2018 Holy Fire burn scar'}),
   ee.Feature(  // Santiago
     santiago.geometry(), {label: 'Santiago'}),
-  ee.Feature(  // Burn scar
-    fire.geometry(), {label: '2018 Holy Fire burn scar'})
+  ee.Feature(    // Coldwater
+    coldwater.geometry(), {label: 'Coldwater'})
 ]);
 
 // set start and end year
 var startyear = 2018;
-var endyear = 2020;
+var endyear = 2030;
  
 // make a date object
 var startdate = ee.Date.fromYMD(startyear, 1, 1);
@@ -86,19 +100,36 @@ var monthlyEVI = ee.ImageCollection.fromImages(
  }).flatten()
 );
 
+
+// Aggregate monthly NDVI (median)
+var monthlyNDVI = ee.ImageCollection.fromImages(
+ years.map(function (y) {
+ return months.map(function(m) {
+ var w = collection2.filter(ee.Filter.calendarRange(y, y, 'year'))
+ .filter(ee.Filter.calendarRange(m, m, 'month'))
+ .median();
+ return w.set('year', y)
+ .set('month', m)
+ .set('system:time_start', ee.Date.fromYMD(y, m, 1));
+
+ });
+ }).flatten()
+);
+
 // Create a time series chart ET
 var TimeSeries_et = ui.Chart.image.seriesByRegion(
     monthlyET, regions, ee.Reducer.median(), 'ET', 70, 'system:time_start', 'label')
         .setChartType('ScatterChart')
         .setOptions({
-          title: 'ET Recovery after 2018 Holy Fire',
+          title: 'ECOSTRESS ET Recovery after 2018 Holy Fire',
           vAxis: {title: 'ET (mm/day)'},
           lineWidth: 1,
           pointSize: 4,
           series: {
-            0: {color: '4040a1'}, // coldwater
-            1: {color: '00FF00'}, // santiago
-            2: {color:'c94c4c'}, // burn scar
+            0: {color:'ffcc5c'}, // burn scar
+            1: {color: '22ff00'}, // santiago  
+            2: {color: '4040a1'}, // coldwater
+         
 }});
 
 // Create a time series chart EVI
@@ -106,14 +137,29 @@ var TimeSeries_evi = ui.Chart.image.seriesByRegion(
     monthlyEVI, regions, ee.Reducer.median(), 'EVI', 30, 'system:time_start', 'label')
         .setChartType('ScatterChart')
         .setOptions({
-          title: 'EVI Recovery after 2018 Holy Fire',
+          title: 'L8 EVI Recovery after 2018 Holy Fire',
           vAxis: {title: 'EVI'},
           lineWidth: 1,
           pointSize: 4,
           series: {
-            0: {color: '4040a1'}, // coldwater
-            1: {color: '00FF00'}, // santiago
-            2: {color:'c94c4c'}, // burn scar
+            0: {color:'ffcc5c'}, // burn scar
+            1: {color: '22ff00'}, // santiago  
+            2: {color: '4040a1'}, // coldwater
+}});
+
+// Create a time series chart NDVI
+var TimeSeries_ndvi = ui.Chart.image.seriesByRegion(
+    monthlyNDVI, regions, ee.Reducer.median(), 'NDVI', 10, 'system:time_start', 'label')
+        .setChartType('ScatterChart')
+        .setOptions({
+          title: 'S2 NDVI Recovery after 2018 Holy Fire',
+          vAxis: {title: 'NDVI'},
+          lineWidth: 1,
+          pointSize: 4,
+          series: {
+            0: {color:'ffcc5c'}, // burn scar
+            1: {color: '22ff00'}, // santiago  
+            2: {color: '4040a1'}, // coldwater
 }});
 
 // Display
@@ -123,13 +169,14 @@ var panel = ui.Panel({
   style: {width: '500px'}
 });
 ui.root.add(panel);
-var label = ui.Label('Thank you for visiting the Holy Fire Vegetation Recovery application (funded by Joint Fire Science Program). Please use timeseries to identify monthly composite image you would like to visualize. Once a date range is selected on the slider (found at the top of the screen), the application will show the average ECOSTRESS ET-PT in units mm/day. You can also click on the "Layers" tab to visualize the Landsat 8 EVI data. Thank you for stopping by, and please check back next month for an update on the recovery!')
+var label = ui.Label('Thank you for visiting the Holy Fire Vegetation Recovery application (funded by Joint Fire Science Program). Please use timeseries to identify monthly composite image you would like to visualize. Once a date range is selected on the slider (found at the top of the screen), the application will show the average ECOSTRESS ET-PT in units mm/day. You can also click on the "Layers" tab to visualize the Landsat 8 EVI and Sentinel-2 NDVI data. Thank you for stopping by, and please check back next month for an update on the recovery!')
 var hyd_sig = ui.Label('Coldwater Runoff Ratio: WY2019 = 0.30 ; WY2020 = 0.30')
 var hyd_sig2 = ui.Label('Santiago Runoff Ratio: WY2019 = 0.28 ; WY2020 = 0.13')
 var hyd_sig3 = ui.Label('Coldwater R-B Index: WY2019 = 1.68 ; WY2020 = 0.52')
 var hyd_sig4 = ui.Label('Santiago R-B Index: WY2019 = 0.91 ; WY2020 = 0.54')
 panel.add(TimeSeries_et)
 panel.add(TimeSeries_evi)
+panel.add(TimeSeries_ndvi)
 panel.add(label)
 panel.add(hyd_sig)
 panel.add(hyd_sig2)
@@ -160,6 +207,10 @@ function renderDateRange(dateRange) {
   .filterDate(dateRange.start(), dateRange.end())
   .median()
   
+  var image_NDVI = collection2
+  .filterDate(dateRange.start(), dateRange.end())
+  .median()
+  
   var vis_et = {min: 0, max: 10, palette: [
   'FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718',
   '74A901', '66A000', '529400', '3E8601', '207401', '056201',
@@ -170,10 +221,17 @@ function renderDateRange(dateRange) {
     '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01',
     '012E01', '011D01', '011301']}  
   
+  var vis_ndvi = {min: 0, max: 1, palette: [
+    'FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901',
+    '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01',
+    '012E01', '011D01', '011301']}  
+  
   var layer_et = ui.Map.Layer(image_et, vis_et, 'ET')
-  var shown_evi = false
+  var shown_evi = true
   var layer_evi = ui.Map.Layer(image_evi, vis_evi, 'EVI',shown_evi)
-  Map.layers().reset([layer_et,layer_evi])
+  var shown_ndvi = true
+  var layer_ndvi = ui.Map.Layer(image_NDVI, vis_ndvi, 'NDVI',shown_ndvi)
+  Map.layers().reset([layer_et,layer_evi,layer_ndvi])
   
   // Map watersheds and fire
   var shown = true; // true or false, 1 or 0 
@@ -181,7 +239,7 @@ function renderDateRange(dateRange) {
   var nameLayerFire = '2018 Holy Fire'; // string
   var nameLayerCold = 'Coldwater' // string
   var nameLayerSant = 'Santiago' // string
-  var visParamsFire = {color: 'c94c4c'}; // dictionary:
+  var visParamsFire = {color: 'ffcc5c'}; // dictionary:
   var visParamsCold = {color: '4040a1'}; // dictionary: 
   var visParamsSant = {color: '22ff00'}; // dictionary: 
   Map.setCenter(-117.5341, 33.7266, 11)
@@ -197,7 +255,7 @@ function renderDateRange(dateRange) {
   var nameLayerFire = '2018 Holy Fire'; // string
   var nameLayerCold = 'Coldwater' // string
   var nameLayerSant = 'Santiago' // string
-  var visParamsFire = {color: 'c94c4c'}; // dictionary:
+  var visParamsFire = {color: 'ffcc5c'}; // dictionary:
   var visParamsCold = {color: '4040a1'}; // dictionary: 
   var visParamsSant = {color: '22ff00'}; // dictionary: 
   Map.setCenter(-117.5341, 33.7266, 11)
@@ -226,7 +284,7 @@ function renderDateRange(dateRange) {
   // set position of panel
   var legend_evi = ui.Panel({
   style: {
-  position: 'bottom-left',
+  position: 'bottom-right',
   padding: '8px 15px'
   }
   });
@@ -244,7 +302,7 @@ function renderDateRange(dateRange) {
   
   // Create legend title EVI
   var legendTitle_evi = ui.Label({
-  value: 'Average EVI',
+  value: 'Average EVI/NDVI',
   style: {
   fontWeight: 'bold',
   fontSize: '12px',
@@ -343,7 +401,7 @@ function renderDateRange(dateRange) {
       });
       };
       //  Palette with the colors
-      var palette =['c94c4c', '22ff00', '4040a1'];
+      var palette =['ffcc5c', '22ff00', '4040a1'];
  
       // name of the legend
       var names = ['2018 Holy Fire Perimeter','Santiago','Coldwater'];
