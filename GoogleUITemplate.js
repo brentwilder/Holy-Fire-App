@@ -9,6 +9,17 @@
  * @author Justin Braaten (braaten@google.com)
  */
 
+/*******************************************************************************
+ * Dependencies *
+ *
+ * A section to load dependencies relevant to app such as palettes and
+ * other toolsets from github
+
+ ******************************************************************************/
+
+// Load palettes from gena github
+var palettes = require('users/gena/packages:palettes');
+
 
 /*******************************************************************************
  * Model *
@@ -23,11 +34,6 @@
 
 // Define a JSON object for storing the data model.
 var m = {};
-
-/* Example
-// Selected year.
-m.year = null;
-*/
 
 
 /*******************************************************************************
@@ -45,12 +51,6 @@ m.year = null;
 // Define a JSON object for storing UI components.
 var c = {};
 
-/* Example
-c.legend = {
-  title: ui.Label();
-}
-*/
-
 
 /*******************************************************************************
  * Composition *
@@ -63,11 +63,7 @@ c.legend = {
  * the composition of complicated apps with many widgets and widget groups.
  ******************************************************************************/
 
-/* Example
 ui.root.clear();
-ui.root.add(c.controlPanel);
-ui.root.add(c.map);
-*/
 
 
 /*******************************************************************************
@@ -87,15 +83,6 @@ ui.root.add(c.map);
 // Define a JSON object for defining CSS-like class style properties.
 var s = {};
 
-/* Example
-s.legend.title = {
-  fontWeight: 'bold',
-  fontSize: '12px',
-  color: '383838'
-};
-c.legend.title.style().set(s.legend.title);
-*/
-
 
 /*******************************************************************************
  * Behaviors *
@@ -111,12 +98,14 @@ c.legend.title.style().set(s.legend.title);
  * 3. As much as possible, include callbacks that update URL parameters.
  ******************************************************************************/
 
-/* Example
-// Handles updating the legend when band selector changes.
-function updateLegend() {
-  c.legend.title.setValue(c.bandSelect.getValue() + ' (%)');
+function getPropertyValueList(dataModelDict, propertyName){
+  // Get a list of values for a specified property name.
+  var result = [];
+  for (var key in dataModelDict) {
+    result.push(dataModelDict[key][propertyName]);
+  }
+  return result;
 }
-*/
 
 
 /*******************************************************************************
@@ -129,7 +118,12 @@ function updateLegend() {
  * 2. As much as possible, use URL params to initial the state of the app.
  ******************************************************************************/
 
-/* Example
-// Selected year.
-m.year = 2020;
-*/
+function findKey(dataModelDict, propertyName, propertyValue){
+  // Find the first dictionary key for a specified property value.
+  for (var key in dataModelDict) {
+    if (dataModelDict[key][propertyName] == propertyValue) {
+      return key;
+    }
+  }
+  return null;
+}
