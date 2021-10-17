@@ -169,19 +169,19 @@ var panel = ui.Panel({
   style: {width: '500px'}
 });
 ui.root.add(panel);
-var label = ui.Label('Thank you for visiting the Holy Fire Vegetation Recovery application (funded by Joint Fire Science Program). Please use timeseries to identify monthly composite image you would like to visualize. Once a date range is selected on the slider (found at the top of the screen), the application will show the average ECOSTRESS ET-PT in units mm/day. You can also click on the "Layers" tab to visualize the Landsat 8 EVI and Sentinel-2 NDVI data. Thank you for stopping by, and please check back next month for an update on the recovery!')
-var hyd_sig = ui.Label('Coldwater Runoff Ratio: WY2019 = 0.30 ; WY2020 = 0.30')
-var hyd_sig2 = ui.Label('Santiago Runoff Ratio: WY2019 = 0.28 ; WY2020 = 0.13')
-var hyd_sig3 = ui.Label('Coldwater R-B Index: WY2019 = 1.68 ; WY2020 = 0.52')
-var hyd_sig4 = ui.Label('Santiago R-B Index: WY2019 = 0.91 ; WY2020 = 0.54')
-panel.add(TimeSeries_et)
+var label = ui.Label('Thank you for visiting the Holy Fire Vegetation Recovery application (funded by Joint Fire Science Program). Please use timeseries to identify monthly composite image you would like to visualize. Once a date range is selected on the slider (found at the top of the screen). You can also click on the "Layers" tab to visualize the Landsat 8 EVI and Sentinel-2 NDVI data. Thank you for stopping by, and please check back next month for an update on the recovery.')
+//var hyd_sig = ui.Label('Coldwater Runoff Ratio: WY2019 = 0.30 ; WY2020 = 0.30')
+//var hyd_sig2 = ui.Label('Santiago Runoff Ratio: WY2019 = 0.28 ; WY2020 = 0.13')
+//var hyd_sig3 = ui.Label('Coldwater R-B Index: WY2019 = 1.68 ; WY2020 = 0.52')
+//var hyd_sig4 = ui.Label('Santiago R-B Index: WY2019 = 0.91 ; WY2020 = 0.54')
+//panel.add(TimeSeries_et)
 panel.add(TimeSeries_evi)
 panel.add(TimeSeries_ndvi)
 panel.add(label)
-panel.add(hyd_sig)
-panel.add(hyd_sig2)
-panel.add(hyd_sig3)
-panel.add(hyd_sig4)
+//panel.add(hyd_sig)
+//panel.add(hyd_sig2)
+//panel.add(hyd_sig3)
+//panel.add(hyd_sig4)
 
 // UI widgets needs client-side data. evaluate()
 // to get client-side values of start and end period
@@ -226,12 +226,12 @@ function renderDateRange(dateRange) {
     '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01',
     '012E01', '011D01', '011301']}  
   
-  var layer_et = ui.Map.Layer(image_et, vis_et, 'ET')
+//  var layer_et = ui.Map.Layer(image_et, vis_et, 'ET')
   var shown_evi = true
   var layer_evi = ui.Map.Layer(image_evi, vis_evi, 'EVI',shown_evi)
   var shown_ndvi = true
   var layer_ndvi = ui.Map.Layer(image_NDVI, vis_ndvi, 'NDVI',shown_ndvi)
-  Map.layers().reset([layer_et,layer_evi,layer_ndvi])
+  Map.layers().reset([layer_evi,layer_ndvi])
   
   // Map watersheds and fire
   var shown = true; // true or false, 1 or 0 
@@ -312,7 +312,7 @@ function renderDateRange(dateRange) {
   });
 
   // Add the titles to the panel
-  legend_et.add(legendTitle_et);
+  //legend_et.add(legendTitle_et);
   legend_evi.add(legendTitle_evi); 
 
   // create the legend images
@@ -356,7 +356,7 @@ function renderDateRange(dateRange) {
   });
  
   // add the thumbnail to the legends
-  legend_et.add(thumbnail_et);
+  //legend_et.add(thumbnail_et);
   legend_evi.add(thumbnail_evi);
  
 
@@ -411,7 +411,7 @@ function renderDateRange(dateRange) {
         legend_et.add(makeRow(palette[i], names[i]));
         }  
  
-        Map.add(legend_et);
+    //    Map.add(legend_et);
         Map.add(legend_evi);
   
 
