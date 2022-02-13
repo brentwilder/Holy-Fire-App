@@ -1,9 +1,9 @@
-// Application to visualize ECOSTRESS daily PT-ET data after 2018 Holy Fire
+// Application to visualize recovery after 2018 Holy Fire
 // Brenton A. Wilder (Referenced from: https://code.earthengine.google.com/46314d510bf295c19e40413af5628055)
 // October 2020
 
 // Set dates
-var Start_period = ee.Date('2018-07-01')
+var Start_period = ee.Date('2015-01-01')
 var End_period = ee.Date(new Date().getTime())
 
 // Import ECOSTRESS image collection
@@ -57,8 +57,8 @@ var regions = ee.FeatureCollection([
 ]);
 
 // set start and end year
-var startyear = 2018;
-var endyear = 2030;
+var startyear = 2015;
+var endyear = 2250;
  
 // make a date object
 var startdate = ee.Date.fromYMD(startyear, 1, 1);
