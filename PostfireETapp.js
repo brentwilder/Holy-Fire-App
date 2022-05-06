@@ -18,7 +18,7 @@ var EVI = evi_dataset.select('EVI')
                      
 
 // Import NDVI image collection (S2)
-var sentinel_dataset = ee.ImageCollection("COPERNICUS/S2_SR")
+var sentinel_dataset = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
     .filterBounds(site)
     .filterDate(Start_period, End_period)
     .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
